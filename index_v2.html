@@ -1,0 +1,2173 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <title>Simulador Pro · Sistemas Operativos</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080d17;
+      --panel: #101929;
+      --panel-hover: #162338;
+      --text: #f0f5ff;
+      --muted: #94a6c2;
+      --line: #23334d;
+      --accent: #6e94ff;
+      --accent-glow: rgba(110, 148, 255, 0.2);
+      --good: #25b87e;
+      --good-bg: rgba(37, 184, 126, 0.14);
+      --bad: #ff6b6b;
+      --bad-bg: rgba(255, 107, 107, 0.14);
+      --warn: #f5b942;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top right, #14223b 0%, var(--bg) 60%);
+      color: var(--text);
+      font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    main {
+      max-width: 820px;
+      margin: auto;
+      padding: 24px 16px 48px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    h1 {
+      font-size: clamp(26px, 5vw, 36px);
+      line-height: 1.15;
+      margin: 4px 0 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 0 0 18px;
+      font-size: 14.5px;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 6px 12px;
+      border-radius: 99px;
+      color: #d3e0f5;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .chip {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      padding: 7px 13px;
+      border-radius: 10px;
+      font: 600 13px system-ui;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .chip:hover { border-color: #46628f; color: var(--text); }
+    .chip.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .panel {
+      background: rgba(16, 25, 41, 0.94);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: clamp(18px, 4vw, 28px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    .progressrow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .track {
+      height: 8px;
+      background: #1d2b42;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 22px;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #5a82ff, #8ab0ff);
+      transition: width .25s cubic-bezier(.4,0,.2,1);
+    }
+
+    .meta-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .qnum {
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .tag-cat {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: #1b2940;
+      color: #a9bddb;
+      border: 1px solid #2b3e5e;
+    }
+
+    .question {
+      font-size: 18px;
+      line-height: 1.52;
+      font-weight: 650;
+      white-space: pre-wrap;
+      margin: 0 0 22px;
+      color: #f7faff;
+    }
+
+    .options {
+      display: grid;
+      gap: 11px;
+    }
+
+    .opt {
+      display: flex;
+      gap: 13px;
+      align-items: flex-start;
+      width: 100%;
+      text-align: left;
+      padding: 14px 16px;
+      border: 1px solid #2c3e59;
+      border-radius: 14px;
+      background: #142033;
+      color: var(--text);
+      font: inherit;
+      font-size: 15px;
+      cursor: pointer;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      transition: transform .08s ease, border-color .15s ease, background .15s ease;
+    }
+
+    .opt:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: var(--panel-hover);
+      transform: translateY(-1px);
+    }
+
+    .letter {
+      flex: 0 0 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #22334d;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #d7e5ff;
+      font-size: 13px;
+    }
+
+    .opt.correct {
+      border-color: var(--good);
+      background: var(--good-bg);
+    }
+    .opt.correct .letter {
+      background: var(--good);
+      color: #062116;
+    }
+
+    .opt.wrong {
+      border-color: var(--bad);
+      background: var(--bad-bg);
+    }
+    .opt.wrong .letter {
+      background: var(--bad);
+      color: #2b0909;
+    }
+
+    .opt:disabled { cursor: default; opacity: 1; }
+
+    .feedback {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      background: #132033;
+      border: 1px solid var(--line);
+      display: none;
+      white-space: pre-wrap;
+      font-size: 14.5px;
+    }
+
+    .feedback.good, .feedback.bad { display: block; animation: fadeIn .2s ease; }
+    .feedback.good { border-color: var(--good); }
+    .feedback.bad { border-color: var(--bad); }
+
+    .feedback strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+    .feedback.good strong { color: #5ce0ab; }
+    .feedback.bad strong { color: #ff9494; }
+
+    .answertext { color: #dce8fa; line-height: 1.55; }
+    .errata-note {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(245, 185, 66, 0.12);
+      border: 1px solid rgba(245, 185, 66, 0.45);
+      color: #ffe3a3;
+      font-size: 13.5px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      align-items: center;
+    }
+
+    button.action {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font: 700 14.5px system-ui;
+      cursor: pointer;
+      background: var(--accent);
+      color: #081021;
+      transition: filter .15s;
+    }
+
+    button.action:hover:not(:disabled) { filter: brightness(1.08); }
+
+    button.secondary {
+      background: #1e2d45;
+      color: #e4edfc;
+      border: 1px solid #324666;
+    }
+
+    button:disabled { opacity: .4; cursor: not-allowed; }
+
+    .kbd-hint {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    kbd {
+      background: #1d2b42;
+      border: 1px solid #34496b;
+      border-radius: 5px;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #d6e4ff;
+    }
+
+    .hidden { display: none !important; }
+
+    .summary { text-align: center; }
+    .score {
+      font-size: clamp(44px, 8vw, 60px);
+      font-weight: 850;
+      letter-spacing: -0.04em;
+      margin: 10px 0 4px;
+      background: linear-gradient(135deg, #fff, #8eb2ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .summary p { color: var(--muted); max-width: 540px; margin: 0 auto 20px; }
+
+    .review-list {
+      text-align: left;
+      margin-top: 28px;
+      border-top: 1px solid var(--line);
+      padding-top: 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .review-item {
+      background: #131f33;
+      border: 1px solid #2a3c59;
+      border-left: 4px solid var(--bad);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+    }
+
+    .review-q { font-weight: 700; margin-bottom: 8px; color: #fff; white-space: pre-wrap; }
+    .review-bad { color: #ff9494; margin-bottom: 4px; }
+    .review-good { color: #5ce0ab; }
+
+    .smallnote {
+      font-size: 12px;
+      color: #798ca8;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .kbd-hint { display: none; }
+      .question { font-size: 16px; }
+      .opt { padding: 12px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <div>
+        <div class="brand">Entrenamiento de Parcial · UTU</div>
+        <h1>Sistemas Operativos</h1>
+      </div>
+      <div class="stats-bar">
+        <div class="pill" id="total-pill">65 consignas</div>
+        <div class="pill" id="timer-pill">⏱ 00:00</div>
+        <div class="pill" id="best-pill">🏆 Récord: —</div>
+      </div>
+    </div>
+
+    <p class="sub">Consignas literales del PDF con distractores del mismo tema (nivel examen real) y aclaraciones técnicas cuando el apunte tiene erratas.</p>
+
+    <div class="filters" id="filters">
+      <button class="chip active" data-cat="all">Todas (65)</button>
+      <button class="chip" data-cat="fs_conc">Archivos y Concurrencia</button>
+      <button class="chip" data-cat="mem_io">Memoria y E/S</button>
+      <button class="chip" data-cat="labs">Laboratorios (SSH, C, Docker, Win)</button>
+      <button class="chip" id="toggle-order" style="margin-left:auto">🔀 Aleatorio: SÍ</button>
+    </div>
+
+    <section class="panel" id="quiz">
+      <div class="progressrow">
+        <span id="progress">Pregunta 1 de 65</span>
+        <span id="score">Aciertos: 0 (0%)</span>
+      </div>
+      <div class="track"><div class="bar" id="bar"></div></div>
+
+      <div class="meta-head">
+        <div class="qnum" id="qnum">PREGUNTA 1</div>
+        <span class="tag-cat" id="qcat">Tema</span>
+      </div>
+
+      <p class="question" id="question"></p>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+
+      <div class="actions">
+        <button class="action hidden" id="next">Siguiente pregunta</button>
+        <button class="action secondary" id="restart">Reiniciar</button>
+        <span class="kbd-hint">Teclas: <kbd>A</kbd>-<kbd>D</kbd> o <kbd>1</kbd>-<kbd>4</kbd> · <kbd>Enter</kbd> avanzar</span>
+      </div>
+    </section>
+
+    <section class="panel summary hidden" id="summary">
+      <div class="qnum">SIMULACRO FINALIZADO</div>
+      <h2>Resultado Final</h2>
+      <div class="score" id="finalscore">0/65</div>
+      <p id="message"></p>
+      <div class="actions" style="justify-content:center">
+        <button class="action" id="again">Repetir este bloque</button>
+        <button class="action secondary" id="missed">Practicar solo incorrectas</button>
+      </div>
+      <div class="review-list hidden" id="review-list"></div>
+    </section>
+
+    <p class="smallnote">Todas las consignas tienen 4 opciones estrictamente del mismo dominio técnico para evitar descartes obvios.</p>
+  </main>
+
+  <script>
+    const RAW_DATA = [
+  {
+    "cat": "fs_conc",
+    "q": "Gestión de memoria FAT:\nConsideremos un disco de 500GB con bloques de 4KB. Si utilizamos una tabla FAT(4 bytes por entrada en RAM), ¿Cuánta memoria RAM consumirá solo la tabla?",
+    "a": "Bloques totales: 500GB / 4KB = (500 * 10^9) / 4096 = 122.070.312 bloques.\nCada bloque exige 4 bytes en RAM: 122.070.312 * 4 bytes = 488 MB.\nDesperdiciar 488 MB solo en el índice demuestra por qué FAT no escala en discos masivos.",
+    "opts": [
+      {
+        "t": "Aproximadamente 488 MB de RAM (122.070.312 bloques × 4 bytes por entrada).",
+        "ok": true
+      },
+      {
+        "t": "Aproximadamente 122 MB de RAM (122.070.312 bloques × 1 byte por entrada).",
+        "ok": false
+      },
+      {
+        "t": "Aproximadamente 244 MB de RAM (122.070.312 bloques × 2 bytes por entrada).",
+        "ok": false
+      },
+      {
+        "t": "Aproximadamente 1,95 GB de RAM (488.281.250 bloques × 4 bytes por entrada).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "En el contexto de la programación concurrente, ¿cuál de las siguientes es una característica propia de los Hilos (Threads) en comparación con los Procesos?",
+    "a": "Los hilos pertenecientes a un mismo proceso comparten el espacio de direcciones de memoria (código, datos globales y heap) y los recursos abiertos del proceso padre, manteniendo cada hilo solo su propio contador de programa, registros y pila (stack).",
+    "note": "Nota sobre el PDF original: El apunte decía textualmente «Los procesos tienen sus propios hilos y comparten el espacio de memoria con el proceso padre» (mezclando 'procesos' con 'hilos'). Lo que comparte la memoria del proceso padre son los HILOS dentro de ese proceso.",
+    "opts": [
+      {
+        "t": "Los hilos de un mismo proceso comparten el espacio de memoria y recursos del proceso padre.",
+        "ok": true
+      },
+      {
+        "t": "Cada hilo posee su propia tabla de páginas aislada y no comparte memoria con el proceso padre.",
+        "ok": false
+      },
+      {
+        "t": "Los hilos de procesos diferentes comparten automáticamente todo su espacio de direcciones.",
+        "ok": false
+      },
+      {
+        "t": "Crear un hilo requiere duplicar por completo el espacio de direcciones del proceso padre mediante fork().",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "¿Cuál es la diferencia fundamental entre concurrencia y paralelismo según el material de estudio?",
+    "a": "Un programa es concurrente si soporta dos o más acciones en progreso (pudiendo intercalarse en un solo núcleo), y es paralelo si soporta dos o más acciones ejecutándose simultáneamente (en el mismo instante físico).",
+    "opts": [
+      {
+        "t": "Un programa es concurrente si soporta dos o más acciones en progreso, y es paralelo si soporta dos o más acciones ejecutándose simultáneamente.",
+        "ok": true
+      },
+      {
+        "t": "Un programa es concurrente si ejecuta acciones simultáneamente en varios núcleos, y es paralelo si intercala tareas en un único núcleo.",
+        "ok": false
+      },
+      {
+        "t": "La concurrencia requiere múltiples procesadores físicos obligatoriamente, mientras que el paralelismo funciona en un solo procesador.",
+        "ok": false
+      },
+      {
+        "t": "Concurrencia y paralelismo son sinónimos exactos que describen la ejecución simultánea de hilos independientes.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Un usuario crea un documento llamado nuevoDocumento.doc y lo borra. El usuario A tiene un vinculo duro. El usuario B tiene un vinculo simbólico. ¿Qué ven al intentar abrirlo?",
+    "a": "Usuario A (vínculo duro): Abre el archivo perfectamente. El SO solo redujo el contador de enlaces del nodo-i de 2 a 1 y los datos siguen intactos.\nUsuario B (vínculo simbólico): Error de archivo no encontrado. La ruta textual original está rota (enlace huérfano).",
+    "opts": [
+      {
+        "t": "Usuario A abre el archivo (contador de enlaces del inodo baja de 2 a 1); Usuario B recibe error de archivo no encontrado (enlace huérfano).",
+        "ok": true
+      },
+      {
+        "t": "Usuario A recibe error de archivo no encontrado; Usuario B abre el archivo porque el symlink apunta directo al inodo.",
+        "ok": false
+      },
+      {
+        "t": "Ambos usuarios abren el archivo sin problemas porque el inodo no se libera mientras exista cualquier tipo de enlace.",
+        "ok": false
+      },
+      {
+        "t": "Ambos usuarios reciben error de archivo no encontrado porque al borrar el nombre original se liberan los bloques de datos.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "Si un programa lee un archivo secuencial de 10MB haciendo 10 millones de llamadas read() de 1 byte. ¿Buscara el disco 10 millones de veces?",
+    "a": "No. El disco no gira 10 millones de veces. El hardware lee el bloque entero (ej. 4 KB) a la RAM (caché de buffer) en el primer acceso. Las siguientes 4.095 llamadas a read() se resuelven a velocidad de RAM.",
+    "opts": [
+      {
+        "t": "No: lee el bloque entero (ej. 4 KB) a la caché de buffer en RAM y las siguientes 4.095 llamadas se resuelven en RAM.",
+        "ok": true
+      },
+      {
+        "t": "Sí: cada llamada al sistema read() de 1 byte obliga a realizar un acceso físico al disco para leer ese byte.",
+        "ok": false
+      },
+      {
+        "t": "No: el disco lee los 10 MB completos de una sola vez dentro de los registros internos de la CPU.",
+        "ok": false
+      },
+      {
+        "t": "Sí: la caché de buffer solo actúa en operaciones de escritura write(), nunca en lecturas secuenciales.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Journaling: El sistema operativo colapsa tras escribir el nodo-i pero antes de actualizar el directorio. ¿Cómo lo soluciona el FS con bitácora al reiniciar?",
+    "a": "Al inspeccionar el log (journal), el sistema operativo ve la transacción inconclusa y simplemente re-aplica (re-plays) la intención restante: añade el nombre al directorio, cierra la transacción y restablece la consistencia sin corrupción.",
+    "opts": [
+      {
+        "t": "Inspecciona el log, detecta la transacción inconclusa y re-aplica (re-plays) la operación pendiente añadiendo el nombre al directorio.",
+        "ok": true
+      },
+      {
+        "t": "Elimina el nodo-i recién creado y marca sus bloques como libres para revertir el sistema al estado anterior.",
+        "ok": false
+      },
+      {
+        "t": "Ejecuta un escaneo completo de todos los bloques del disco buscando inodos sin referencia en directorios.",
+        "ok": false
+      },
+      {
+        "t": "Crea un enlace simbólico automático en el directorio raíz (/lost+found) sin consultar la bitácora.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "En un esquema de Paginación Simple (sin memoria virtual), ¿cómo se organiza la memoria y qué tipo de fragmentación puede persistir?",
+    "a": "El espacio de direcciones del proceso se divide en páginas de tamaño fijo y la memoria física en marcos (frames) del mismo tamaño; no existe fragmentación externa y solo puede existir una fracción de fragmentación interna en la última página del proceso.",
+    "opts": [
+      {
+        "t": "Espacio lógico en páginas fijas y RAM en marcos del mismo tamaño; sin fragmentación externa y posible fragmentación interna en la última página.",
+        "ok": true
+      },
+      {
+        "t": "Espacio lógico en páginas variables y RAM en marcos fijos; sin fragmentación interna y con fragmentación externa entre marcos.",
+        "ok": false
+      },
+      {
+        "t": "Espacio lógico y físico en bloques de tamaño variable; persiste tanto fragmentación interna como fragmentación externa.",
+        "ok": false
+      },
+      {
+        "t": "Espacio lógico en páginas fijas y RAM en marcos fijos; elimina por completo tanto la fragmentación interna como la externa.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "Si un sistema utiliza direcciones lógicas de 16 bits con un tamaño de página de 1 KB (2^10 = 1024 bytes), ¿cómo se descompone la dirección virtual para su traducción?",
+    "a": "6 bits de mayor orden para el número de página virtual y 10 bits de menor orden para el desplazamiento (offset).",
+    "opts": [
+      {
+        "t": "6 bits de mayor orden para el número de página virtual y 10 bits de menor orden para el desplazamiento (offset).",
+        "ok": true
+      },
+      {
+        "t": "10 bits de mayor orden para el número de página virtual y 6 bits de menor orden para el desplazamiento (offset).",
+        "ok": false
+      },
+      {
+        "t": "8 bits de mayor orden para el número de página virtual y 8 bits de menor orden para el desplazamiento (offset).",
+        "ok": false
+      },
+      {
+        "t": "4 bits de mayor orden para el número de página virtual y 12 bits de menor orden para el desplazamiento (offset).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Cuando múltiples hilos acceden y modifican un recurso compartido (como el saldo de una cuenta bancaria) sin control, generando resultados incorrectos, ¿qué fenómeno está ocurriendo?",
+    "a": "Interferencia (condición de carrera sobre datos compartidos sin sincronización).",
+    "opts": [
+      {
+        "t": "Interferencia.",
+        "ok": true
+      },
+      {
+        "t": "Interbloqueo (Deadlock).",
+        "ok": false
+      },
+      {
+        "t": "Bloqueo Activo (Livelock).",
+        "ok": false
+      },
+      {
+        "t": "Inanición (Starvation).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "¿Qué herramienta de sincronización actúa como una generalización de los bloqueos mutuos (locks), permitiendo regular que un número específico y limitado de hilos (por ejemplo, 5) acceda a una sección crítica simultáneamente?",
+    "a": "Semáforo (inicializado con un contador N = 5).",
+    "opts": [
+      {
+        "t": "Semáforo.",
+        "ok": true
+      },
+      {
+        "t": "Mutex binario (exclusión mutua simple).",
+        "ok": false
+      },
+      {
+        "t": "Spinlock (espera activa individual).",
+        "ok": false
+      },
+      {
+        "t": "Bit de modificación (Dirty bit).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "En la anatomía física de una partición de disco, ¿qué componente es considerado el \"ADN\" del sistema de archivos, conteniendo parámetros críticos cuya corrupción vuelve al disco ilegible?",
+    "a": "El Superbloque (almacena tipo de FS, tamaño de bloque, cantidad de inodos y bloques libres).",
+    "opts": [
+      {
+        "t": "El Superbloque.",
+        "ok": true
+      },
+      {
+        "t": "El Inodo raíz.",
+        "ok": false
+      },
+      {
+        "t": "La bitácora (Journal).",
+        "ok": false
+      },
+      {
+        "t": "La tabla de páginas (PTE).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "¿Cuál es el \"defecto fatal\" o desventaja principal de utilizar una arquitectura de asignación basada en una tabla FAT cargada en memoria?",
+    "a": "Desperdicio de memoria RAM, ya que en discos masivos la tabla exige cientos de Megabytes o Gigabytes enteros cargados en memoria principal.",
+    "opts": [
+      {
+        "t": "Desperdicio de memoria RAM, ya que en discos masivos la tabla exige cientos de MB o GB enteros en memoria principal.",
+        "ok": true
+      },
+      {
+        "t": "Imposibilidad de realizar acceso aleatorio a los bloques de un archivo sin leer todo el disco.",
+        "ok": false
+      },
+      {
+        "t": "Consumo excesivo de CPU porque cada entrada de la tabla requiere cifrado asimétrico.",
+        "ok": false
+      },
+      {
+        "t": "Generación de fragmentación externa grave al exigir que los archivos ocupen bloques contiguos.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "¿Cuál es el tamaño máximo permitido para un único archivo individual en el sistema de archivos FAT32?",
+    "a": "4 GB (limitado por el campo de tamaño de archivo de 32 bits: 2^32 - 1 bytes).",
+    "opts": [
+      {
+        "t": "4 GB.",
+        "ok": true
+      },
+      {
+        "t": "2 GB.",
+        "ok": false
+      },
+      {
+        "t": "16 GB.",
+        "ok": false
+      },
+      {
+        "t": "32 GB.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "En el contexto de interbloqueos, ¿en qué consiste la condición de exclusión mutua?",
+    "a": "Cada recurso se asigna en un momento dado a un solo proceso de forma exclusiva, o está disponible. Ningún otro proceso puede acceder a un recurso que ya ha sido asignado.",
+    "opts": [
+      {
+        "t": "Cada recurso se asigna en un momento dado a un solo proceso de forma exclusiva, o está disponible.",
+        "ok": true
+      },
+      {
+        "t": "Un proceso retiene recursos asignados previamente mientras solicita nuevos recursos.",
+        "ok": false
+      },
+      {
+        "t": "Los recursos otorgados a un proceso no se le pueden quitar por la fuerza.",
+        "ok": false
+      },
+      {
+        "t": "Existe una cadena cerrada de procesos donde cada uno espera un recurso retenido por el siguiente.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "La condición para interbloqueo en la que un proceso retiene recursos asignados previamente mientras solicita nuevos recursos se denomina:",
+    "a": "Contención y espera (o Poseer y esperar / Hold and wait).",
+    "opts": [
+      {
+        "t": "Contención y espera (o Poseer y esperar / Hold and wait).",
+        "ok": true
+      },
+      {
+        "t": "Espera circular (Circular wait).",
+        "ok": false
+      },
+      {
+        "t": "Condición no apropiativa (No preemption).",
+        "ok": false
+      },
+      {
+        "t": "Exclusión mutua (Mutual exclusion).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "¿Qué establece la condición no apropiativa (no preemption) de los interbloqueos?",
+    "a": "Los recursos otorgados previamente a un proceso no se le pueden quitar por la fuerza; deben ser liberados de manera explícita por el proceso que los sostiene.",
+    "opts": [
+      {
+        "t": "Los recursos otorgados previamente a un proceso no se le pueden quitar por la fuerza; deben ser liberados explícitamente por él.",
+        "ok": true
+      },
+      {
+        "t": "Los recursos pueden ser retirados temporalmente por el planificador en cualquier momento sin afectar al proceso.",
+        "ok": false
+      },
+      {
+        "t": "Un proceso debe liberar todos sus recursos actuales antes de poder solicitar uno nuevo.",
+        "ok": false
+      },
+      {
+        "t": "Cada recurso puede ser compartido simultáneamente en modo escritura por varios procesos.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "¿Qué es un interbloqueo (deadlock) en un sistema operativo?",
+    "a": "Es el bloqueo permanente de un conjunto de procesos donde cada uno está detenido esperando un recurso o evento que solo otro proceso bloqueado del mismo conjunto puede liberar o desencadenar.",
+    "opts": [
+      {
+        "t": "El bloqueo permanente de un conjunto de procesos donde cada uno espera un recurso que solo otro proceso del mismo conjunto puede liberar.",
+        "ok": true
+      },
+      {
+        "t": "La anomalía donde dos procesos cambian continuamente sus estados en respuesta al otro gastando CPU sin progresar.",
+        "ok": false
+      },
+      {
+        "t": "La postergación indefinida de un proceso porque la política de planificación beneficia siempre a tareas más cortas.",
+        "ok": false
+      },
+      {
+        "t": "La corrupción de datos que ocurre cuando dos hilos modifican una variable compartida sin semáforo.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "¿Qué es un recurso apropiativo (preemptible resource)?",
+    "a": "Un recurso que se puede quitar al proceso que lo posee temporalmente sin causarle efectos dañinos ni pérdida de datos (por ejemplo, la memoria principal o la CPU).",
+    "opts": [
+      {
+        "t": "Un recurso que se puede quitar temporalmente al proceso que lo posee sin causarle efectos dañinos ni pérdida de datos (ej. memoria RAM).",
+        "ok": true
+      },
+      {
+        "t": "Un recurso que no se le puede quitar a un proceso sin hacer que su cálculo o tarea falle (ej. grabador de CD/DVD).",
+        "ok": false
+      },
+      {
+        "t": "Un recurso exclusivo que solo puede liberarse cuando el proceso finaliza su ejecución completa.",
+        "ok": false
+      },
+      {
+        "t": "Un dispositivo de carácter que no permite realizar búsquedas aleatorias mediante seek.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "¿Qué es un recurso no apropiativo (non-preemptible resource)?",
+    "a": "Un recurso que no se le puede quitar a un proceso sin hacer que su cálculo o tarea falle (por ejemplo, un grabador de CD/DVD o una impresora).",
+    "opts": [
+      {
+        "t": "Un recurso que no se le puede quitar a un proceso sin hacer que su cálculo o tarea falle (ej. grabador de CD/DVD o impresora).",
+        "ok": true
+      },
+      {
+        "t": "Un recurso que puede retirarse temporalmente sin pérdida de datos (ej. memoria principal o procesador).",
+        "ok": false
+      },
+      {
+        "t": "Un recurso virtualizado que permite acceso simultáneo de escritura sin exclusión mutua.",
+        "ok": false
+      },
+      {
+        "t": "Cualquier página en RAM que tenga activado el bit de modificación (Dirty bit).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "En el sistema de archivos ext4 de Linux, ¿qué sucede cuando se elimina un archivo original que tenía asociado un Vínculo Duro (Hard Link) y un Vínculo Simbólico (Symlink)?",
+    "a": "El vínculo duro sigue funcionando perfectamente porque apunta al mismo nodo-i (cuyo contador baja de 2 a 1), mientras que el vínculo simbólico queda roto (huérfano).",
+    "opts": [
+      {
+        "t": "El vínculo duro sigue funcionando perfectamente (contador del nodo-i baja de 2 a 1), mientras que el vínculo simbólico queda roto (huérfano).",
+        "ok": true
+      },
+      {
+        "t": "El vínculo simbólico sigue funcionando porque guarda una copia de los punteros a bloques, y el vínculo duro queda huérfano.",
+        "ok": false
+      },
+      {
+        "t": "Ambos enlaces quedan rotos porque el comando rm elimina el nodo-i independientemente del contador de enlaces.",
+        "ok": false
+      },
+      {
+        "t": "El sistema operativo impide borrar el archivo original hasta que se eliminen manualmente ambos vínculos.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "En el sistema de archivos NTFS de Windows, ¿qué ocurre con los archivos que son diminutos (de apenas unos cientos de bytes)?",
+    "a": "Se alojan directamente dentro del propio registro de la MFT (Master File Table) de 1 KB como \"atributos residentes\", sin usar bloques de disco adicionales.",
+    "opts": [
+      {
+        "t": "Se alojan directamente dentro del propio registro de la MFT (Master File Table) de 1 KB como \"atributos residentes\", sin usar bloques extra.",
+        "ok": true
+      },
+      {
+        "t": "Se almacenan en el Superbloque de la partición para evitar fragmentación interna en los clústeres.",
+        "ok": false
+      },
+      {
+        "t": "Se agrupan varios dentro de un mismo inodo compartido hasta completar un bloque de 4 KB.",
+        "ok": false
+      },
+      {
+        "t": "Ocupan obligatoriamente un bloque de disco entero de 4 KB dejando el resto como fragmentación externa.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Qué componente de hardware, ubicado dentro de la CPU, se encarga de traducir las direcciones lógicas (virtuales) generadas por los programas en direcciones físicas reales de la memoria RAM?",
+    "a": "La Unidad de Gestión de Memoria (MMU).",
+    "opts": [
+      {
+        "t": "La Unidad de Gestión de Memoria (MMU).",
+        "ok": true
+      },
+      {
+        "t": "El controlador de Acceso Directo a Memoria (DMA).",
+        "ok": false
+      },
+      {
+        "t": "La Capa de Abstracción de Hardware (HAL).",
+        "ok": false
+      },
+      {
+        "t": "El Sistema de Archivos Virtual (VFS).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "En un sistema con paginación, leer la Tabla de Páginas en la RAM duplica el tiempo de acceso. ¿Cómo se soluciona este problema de rendimiento a nivel de hardware?",
+    "a": "Incorporando el TLB (Translation Lookaside Buffer), una caché asociativa ultra-rápida dentro de la MMU que almacena las traducciones recientes.",
+    "opts": [
+      {
+        "t": "Incorporando el TLB (Translation Lookaside Buffer), una caché asociativa ultra-rápida dentro de la MMU que almacena las traducciones recientes.",
+        "ok": true
+      },
+      {
+        "t": "Almacenando el contenido completo de las páginas más usadas dentro de los registros del controlador DMA.",
+        "ok": false
+      },
+      {
+        "t": "Activando el bit de modificación (Dirty bit) en todas las entradas de la tabla de páginas.",
+        "ok": false
+      },
+      {
+        "t": "Eliminando la tabla de páginas y asignando direcciones físicas contiguas desde el compilador.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Cuál es una diferencia clave entre la Paginación y la Segmentación en la gestión de memoria?",
+    "a": "La paginación divide la memoria en bloques de tamaño fijo (1D) eliminando la fragmentación externa, mientras que la segmentación usa bloques de tamaño variable (2D) visibles al programador.",
+    "opts": [
+      {
+        "t": "La paginación divide la memoria en bloques de tamaño fijo (1D) eliminando la fragmentación externa; la segmentación usa bloques variables (2D) visibles al programador.",
+        "ok": true
+      },
+      {
+        "t": "La paginación usa bloques variables (2D) visibles al programador; la segmentación usa bloques fijos (1D) que eliminan la fragmentación externa.",
+        "ok": false
+      },
+      {
+        "t": "La paginación sufre fragmentación externa grave, mientras que la segmentación elimina toda fragmentación interna y externa.",
+        "ok": false
+      },
+      {
+        "t": "La segmentación no requiere traducción de direcciones por hardware, mientras que la paginación depende de la MMU.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "Cuando un proceso padre crea un proceso hijo mediante fork(), ¿en qué consiste la técnica de optimización Copy-On-Write (COW)?",
+    "a": "Padre e hijo comparten las mismas páginas físicas en modo de solo lectura; solo si alguno intenta escribir, la MMU lanza un Trap y el sistema operativo clona esa página específica.",
+    "opts": [
+      {
+        "t": "Padre e hijo comparten las mismas páginas físicas en modo solo lectura; solo si alguno intenta escribir, la MMU lanza un Trap y el SO clona esa página.",
+        "ok": true
+      },
+      {
+        "t": "El sistema operativo duplica inmediatamente todos los marcos físicos del padre en RAM antes de retornar de fork().",
+        "ok": false
+      },
+      {
+        "t": "Padre e hijo comparten las páginas en modo lectura/escritura simultánea sin intervención de la MMU.",
+        "ok": false
+      },
+      {
+        "t": "El proceso hijo escribe directamente en el área de swap del disco hasta que ejecuta execvp().",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "En una entrada de la tabla de páginas (PTE), ¿cuál es el propósito del bit de modificación (Modify / Dirty bit)?",
+    "a": "Indicar si la página sufrió una operación de escritura en RAM, para saber si es obligatorio reescribirla en el disco antes de desalojar su marco.",
+    "opts": [
+      {
+        "t": "Indicar si la página sufrió una operación de escritura en RAM, para saber si es obligatorio reescribirla en el disco antes de desalojar su marco.",
+        "ok": true
+      },
+      {
+        "t": "Indicar si la página se encuentra actualmente cargada en la memoria física (RAM) o en el disco.",
+        "ok": false
+      },
+      {
+        "t": "Indicar si un proceso de usuario tiene permisos de escritura sobre esa página o si es de solo lectura.",
+        "ok": false
+      },
+      {
+        "t": "Indicar si la página fue leída recientemente para que el algoritmo de reemplazo la mantenga en el TLB.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "¿Cómo se denomina la anomalía de concurrencia en la que dos o más procesos cambian continuamente sus estados internos en respuesta a los demás (como dos personas intentando esquivarse en un pasillo hacia el mismo lado), consumiendo CPU pero sin lograr ningún progreso?",
+    "a": "Bloqueo Activo (Livelock).",
+    "opts": [
+      {
+        "t": "Bloqueo Activo (Livelock).",
+        "ok": true
+      },
+      {
+        "t": "Interbloqueo (Deadlock).",
+        "ok": false
+      },
+      {
+        "t": "Inanición (Starvation).",
+        "ok": false
+      },
+      {
+        "t": "Interferencia (Race condition).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Según Edward G. Coffman Jr., existen cuatro condiciones necesarias que deben cumplirse simultáneamente para que ocurra un bloqueo mutuo (deadlock). ¿Cuál de las siguientes NO es una de ellas?",
+    "a": "Apropiación Forzosa de Recursos (Preemption). (Las 4 condiciones de Coffman son: Exclusión mutua, Contención y espera, No apropiación y Espera circular).",
+    "opts": [
+      {
+        "t": "Apropiación Forzosa de Recursos (Preemption).",
+        "ok": true
+      },
+      {
+        "t": "Exclusión mutua.",
+        "ok": false
+      },
+      {
+        "t": "Contención y espera (Hold and wait).",
+        "ok": false
+      },
+      {
+        "t": "Espera circular.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Si deseamos prevenir los bloqueos mutuos atacando específicamente la condición de \"Espera Circular\", ¿qué estrategia debemos implementar en el sistema?",
+    "a": "Imponer un orden lineal de numeración y adquisición de los recursos, evitando que se formen ciclos de espera.",
+    "opts": [
+      {
+        "t": "Imponer un orden lineal de numeración y adquisición de los recursos, evitando que se formen ciclos de espera.",
+        "ok": true
+      },
+      {
+        "t": "Exigir que cada proceso solicite y obtenga todos sus recursos juntos antes de comenzar a ejecutarse.",
+        "ok": false
+      },
+      {
+        "t": "Permitir que el sistema operativo retire por la fuerza cualquier recurso asignado si otro proceso lo reclama.",
+        "ok": false
+      },
+      {
+        "t": "Eliminar la exclusión mutua permitiendo escritura simultánea en todos los dispositivos de hardware.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Cuál es la función principal de un controlador de dispositivo (device controller) en el hardware de E/S?",
+    "a": "Es el componente electrónico (chip o tarjeta) que controla físicamente el dispositivo de E/S y traduce los comandos del sistema operativo en operaciones de bajo nivel.",
+    "opts": [
+      {
+        "t": "Es el componente electrónico (chip o tarjeta) que controla físicamente el dispositivo de E/S y traduce los comandos en operaciones de bajo nivel.",
+        "ok": true
+      },
+      {
+        "t": "Es el módulo de software del kernel que ofrece una interfaz estándar independiente del fabricante a las aplicaciones.",
+        "ok": false
+      },
+      {
+        "t": "Es la biblioteca en espacio de usuario que administra las colas de impresión y transferencia (spooling).",
+        "ok": false
+      },
+      {
+        "t": "Es el componente de la CPU encargado de traducir direcciones virtuales en direcciones físicas de RAM.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Cómo se realiza la comunicación en un sistema con espacio de puertos de E/S dedicado?",
+    "a": "La CPU utiliza instrucciones especiales de máquina en modo kernel (como IN y OUT) para leer y escribir en las direcciones de puerto de los registros del controlador.",
+    "opts": [
+      {
+        "t": "La CPU utiliza instrucciones especiales de máquina en modo kernel (como IN y OUT) sobre las direcciones de puerto de los registros del controlador.",
+        "ok": true
+      },
+      {
+        "t": "La CPU lee y escribe en los registros del controlador mediante instrucciones ordinarias de acceso a memoria RAM.",
+        "ok": false
+      },
+      {
+        "t": "Los procesos de usuario escriben directamente en los puertos físicos sin cambiar a modo kernel mediante llamadas open().",
+        "ok": false
+      },
+      {
+        "t": "El controlador del dispositivo envía señales IRQ por cada byte sin utilizar registros de puerto ni instrucciones de CPU.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿En qué consiste la E/S por asignación de memoria (Memory-mapped I/O)?",
+    "a": "Asigna los registros de control del dispositivo al espacio de direcciones de memoria principal, permitiendo leer y escribir en ellos mediante instrucciones de memoria ordinarias.",
+    "opts": [
+      {
+        "t": "Asigna los registros de control del dispositivo al espacio de direcciones de memoria principal, permitiendo usar instrucciones de memoria ordinarias.",
+        "ok": true
+      },
+      {
+        "t": "Separa los registros de los dispositivos en un espacio aislado accesible únicamente con instrucciones especiales IN y OUT.",
+        "ok": false
+      },
+      {
+        "t": "Reserva una partición en el disco duro para mapear los búferes de E/S cuando la memoria RAM está llena.",
+        "ok": false
+      },
+      {
+        "t": "Permite que cada periférico ejecute instrucciones de CPU directamente sobre la caché L1 del procesador.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Qué ventaja en materia de protección ofrece la E/S por asignación de memoria?",
+    "a": "El sistema operativo puede impedir que los procesos de usuario accedan a los registros del dispositivo simplemente no incluyendo esas páginas en su tabla de páginas.",
+    "opts": [
+      {
+        "t": "El SO puede impedir que los procesos de usuario accedan a los registros del dispositivo simplemente no incluyendo esas páginas en su tabla de páginas.",
+        "ok": true
+      },
+      {
+        "t": "Obliga a que todas las operaciones de E/S pasen por instrucciones privilegiadas IN y OUT que bloquean el bus.",
+        "ok": false
+      },
+      {
+        "t": "Cifra automáticamente mediante hardware todos los datos escritos en los registros de control del dispositivo.",
+        "ok": false
+      },
+      {
+        "t": "Impide que el controlador DMA acceda a la memoria principal sin autorización explícita de cada proceso de usuario.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Cuál es la principal desventaja de la E/S programada por espera ocupada?",
+    "a": "Mantiene ocupada la CPU de manera improductiva sondeando continuamente el estado del dispositivo.",
+    "opts": [
+      {
+        "t": "Mantiene ocupada la CPU de manera improductiva sondeando continuamente el estado del dispositivo.",
+        "ok": true
+      },
+      {
+        "t": "Genera un exceso de interrupciones de hardware que saturan la pila del kernel en cada byte transferido.",
+        "ok": false
+      },
+      {
+        "t": "Requiere hardware DMA especializado en cada periférico para poder leer el registro de estado.",
+        "ok": false
+      },
+      {
+        "t": "Impide que el sistema operativo bloquee las páginas en RAM durante las transferencias de datos.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Cómo funciona el método de E/S controlada por interrupciones?",
+    "a": "El driver inicia el dispositivo y permite que la CPU ejecute otro trabajo; al completar la operación, el dispositivo genera una interrupción para alertar al sistema.",
+    "opts": [
+      {
+        "t": "El driver inicia el dispositivo y permite que la CPU ejecute otro trabajo; al completar la operación, el dispositivo genera una interrupción.",
+        "ok": true
+      },
+      {
+        "t": "La CPU permanece en un bucle verificando el registro de estado del dispositivo hasta que finaliza la transferencia.",
+        "ok": false
+      },
+      {
+        "t": "Un chip especializado transfiere bloques enteros a la RAM sin avisar nunca al procesador mediante señales IRQ.",
+        "ok": false
+      },
+      {
+        "t": "El proceso de usuario queda ejecutándose en modo kernel hasta que el periférico termina de escribir en disco.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "En la gestión de Entrada/Salida (E/S), ¿qué característica define a los \"Dispositivos de Carácter\" a diferencia de los \"Dispositivos de Bloque\"?",
+    "a": "Envían o reciben un flujo continuo de bytes sin estructura de bloques direccionables y sin posibilidad de realizar búsquedas aleatorias mediante seek (como ratones o impresoras).",
+    "opts": [
+      {
+        "t": "Envían o reciben un flujo continuo de bytes sin estructura de bloques direccionables ni posibilidad de búsqueda aleatoria mediante seek.",
+        "ok": true
+      },
+      {
+        "t": "Almacenan datos en sectores fijos direccionables y permiten acceder aleatoriamente a cualquier posición mediante seek.",
+        "ok": false
+      },
+      {
+        "t": "Transfieren exclusivamente bloques de 4 KB mediante Acceso Directo a Memoria (DMA) sin generar interrupciones.",
+        "ok": false
+      },
+      {
+        "t": "Utilizan una tabla FAT interna para mapear cada carácter enviado hacia la memoria principal.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Cómo funciona la transferencia de datos por Acceso Directo a Memoria (DMA)?",
+    "a": "Un chip controlador especializado toma el control del bus y transfiere bloques enteros directamente entre el dispositivo y la RAM, interrumpiendo a la CPU únicamente al finalizar el bloque completo.",
+    "opts": [
+      {
+        "t": "Un chip controlador especializado toma el control del bus y transfiere bloques enteros entre el dispositivo y la RAM, interrumpiendo a la CPU solo al finalizar.",
+        "ok": true
+      },
+      {
+        "t": "La CPU lee cada byte desde los registros del controlador y lo copia hacia la RAM mediante instrucciones IN/OUT.",
+        "ok": false
+      },
+      {
+        "t": "El controlador DMA interrumpe a la CPU por cada byte transferido para que la MMU valide la dirección física.",
+        "ok": false
+      },
+      {
+        "t": "El driver en espacio de usuario copia los bloques directamente desde el periférico al archivo de paginación (swap).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Por qué es indispensable aplicar el bloqueo de páginas en memoria (page locking) cuando se está realizando una transferencia mediante DMA?",
+    "a": "Para evitar que el algoritmo de reemplazo de páginas del sistema operativo reubique o envíe al disco (swap) el búfer físico en RAM mientras el chip DMA está escribiendo o leyendo datos en él.",
+    "opts": [
+      {
+        "t": "Para evitar que el algoritmo de reemplazo de páginas reubique o envíe al disco (swap) el búfer físico en RAM mientras el chip DMA transfiere datos.",
+        "ok": true
+      },
+      {
+        "t": "Para impedir que la CPU ejecute otros procesos en paralelo mientras el controlador DMA ocupa el bus del sistema.",
+        "ok": false
+      },
+      {
+        "t": "Para forzar que la MMU traduzca direcciones virtuales en cada byte transferido por el controlador DMA.",
+        "ok": false
+      },
+      {
+        "t": "Para activar el bit de modificación (Dirty bit) antes de que el periférico comience a leer la memoria.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Qué es el Acceso Directo a Memoria (DMA)?",
+    "a": "Es un mecanismo en el que un chip controlador especializado administra la transferencia directa de bloques de datos entre la memoria principal y el dispositivo de E/S sin intervención constante de la CPU.",
+    "opts": [
+      {
+        "t": "Un mecanismo donde un chip controlador especializado administra la transferencia directa de bloques entre la RAM y el dispositivo de E/S sin intervención constante de la CPU.",
+        "ok": true
+      },
+      {
+        "t": "Una técnica donde los procesos de usuario acceden directamente a la memoria física saltándose la protección de la MMU.",
+        "ok": false
+      },
+      {
+        "t": "Una caché asociativa dentro del procesador que almacena las traducciones recientes de páginas virtuales.",
+        "ok": false
+      },
+      {
+        "t": "Un método de E/S programada en el que la CPU sondea continuamente el estado del dispositivo hasta completar la operación.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿En qué momento interrumpe el controlador DMA a la CPU?",
+    "a": "Genera una única interrupción sólo cuando ha completado la transferencia de todo el bloque de datos solicitado.",
+    "opts": [
+      {
+        "t": "Genera una única interrupción solo cuando ha completado la transferencia de todo el bloque de datos solicitado.",
+        "ok": true
+      },
+      {
+        "t": "Genera una interrupción cada vez que transfiere un byte individual hacia la memoria principal.",
+        "ok": false
+      },
+      {
+        "t": "Genera una interrupción antes de iniciar cada ciclo de lectura para pedir permiso al planificador de CPU.",
+        "ok": false
+      },
+      {
+        "t": "Nunca genera interrupciones; la CPU debe realizar sondeo (polling) para detectar el fin de la transferencia.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Cuál es la función del manejador de interrupciones dentro de la estructura del software de E/S?",
+    "a": "Ocultar las interrupciones del hardware bloqueando el proceso invocador hasta que se completa la E/S y despertándolo cuando la interrupción ocurre.",
+    "opts": [
+      {
+        "t": "Ocultar las interrupciones del hardware bloqueando el proceso invocador hasta que se completa la E/S y despertándolo cuando ocurre la interrupción.",
+        "ok": true
+      },
+      {
+        "t": "Gestionar las colas de impresión (spooling) y proporcionar bibliotecas de formato en el espacio de usuario.",
+        "ok": false
+      },
+      {
+        "t": "Escribir directamente en los registros físicos del periférico utilizando código específico del fabricante.",
+        "ok": false
+      },
+      {
+        "t": "Asignar dinámicamente direcciones de E/S y líneas IRQ cuando se conecta un dispositivo Plug and Play.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Estructura de datos en sistemas UNIX/Linux (como ext4) que almacena los metadatos de un archivo (tamaño, permisos, fechas) y los punteros a sus bloques de datos, pero no contiene ni los datos en sí ni el nombre del archivo.",
+    "a": "Inodo.",
+    "opts": [
+      {
+        "t": "Inodo.",
+        "ok": true
+      },
+      {
+        "t": "Superbloque.",
+        "ok": false
+      },
+      {
+        "t": "Entrada de directorio (dentry).",
+        "ok": false
+      },
+      {
+        "t": "Tabla FAT.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Mecanismo de fiabilidad (también llamado Diario o Bitácora) presente en sistemas como ext3, ext4 y NTFS que registra las transacciones antes de escribirlas físicamente en el disco para recuperar la consistencia rápidamente tras un apagón.",
+    "a": "Journaling o Journal.",
+    "opts": [
+      {
+        "t": "Journaling o Journal.",
+        "ok": true
+      },
+      {
+        "t": "Copy-On-Write (COW).",
+        "ok": false
+      },
+      {
+        "t": "Spooling.",
+        "ok": false
+      },
+      {
+        "t": "Paginación por demanda.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Qué rol cumplen los controladores de dispositivos (device drivers)?",
+    "a": "Contienen el código específico dependiente del dispositivo encargado de escribir los registros de control y adaptar las particularidades del hardware a una interfaz estándar.",
+    "opts": [
+      {
+        "t": "Contienen el código específico dependiente del dispositivo que escribe los registros de control y adapta el hardware a una interfaz estándar.",
+        "ok": true
+      },
+      {
+        "t": "Son los chips electrónicos soldados al periférico que ejecutan las operaciones mecánicas de bajo nivel.",
+        "ok": false
+      },
+      {
+        "t": "Forman la capa de software independiente del dispositivo que gestiona los nombres simbólicos y el almacenamiento en búfer.",
+        "ok": false
+      },
+      {
+        "t": "Administra las bibliotecas de usuario y las colas de impresión antes de entrar en modo kernel.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Qué funciones realiza el software de E/S que reside en el espacio de usuario?",
+    "a": "Proporciona bibliotecas de sistema (como llamadas a formato de datos) y gestiona sistemas de colas de impresión o transferencia (spooling).",
+    "opts": [
+      {
+        "t": "Proporciona bibliotecas de sistema (formato de datos) y gestiona sistemas de colas de impresión o transferencia (spooling).",
+        "ok": true
+      },
+      {
+        "t": "Atiende directamente las interrupciones de hardware (IRQ) y despierta a los procesos bloqueados en el kernel.",
+        "ok": false
+      },
+      {
+        "t": "Escribe en los registros de control del periférico mediante instrucciones privilegiadas IN y OUT.",
+        "ok": false
+      },
+      {
+        "t": "Mapea las direcciones físicas del bus a direcciones lógicas mediante la Capa de Abstracción de Hardware (HAL).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Cuál es el propósito del uso de búferes (buffering) en las operaciones de E/S?",
+    "a": "Suavizar las diferencias de velocidad entre el hardware de E/S y la CPU, desacoplando la transferencia física del espacio de direcciones de las aplicaciones.",
+    "opts": [
+      {
+        "t": "Suavizar las diferencias de velocidad entre el hardware de E/S y la CPU, desacoplando la transferencia física del espacio de las aplicaciones.",
+        "ok": true
+      },
+      {
+        "t": "Aumentar la velocidad mecánica de rotación del disco físico mediante el acceso directo a registros.",
+        "ok": false
+      },
+      {
+        "t": "Evitar que el sistema operativo tenga que utilizar interrupciones de hardware al finalizar una operación de lectura.",
+        "ok": false
+      },
+      {
+        "t": "Eliminar la necesidad de utilizar memoria RAM como caché intermedia entre el procesador y los periféricos.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Qué objetivo persigue la tecnología Plug and Play en la gestión de E/S?",
+    "a": "Permite configurar y asignar dinámicamente direcciones de E/S y líneas de interrupción (IRQ) a los periféricos al ser conectados, evitando conflictos fijos de hardware.",
+    "opts": [
+      {
+        "t": "Configurar y asignar dinámicamente direcciones de E/S y líneas de interrupción (IRQ) al conectar periféricos, evitando conflictos.",
+        "ok": true
+      },
+      {
+        "t": "Permitir que los periféricos funcionen sin necesidad de instalar controladores (drivers) en el sistema operativo.",
+        "ok": false
+      },
+      {
+        "t": "Bloquear las páginas de memoria en RAM durante las transferencias realizadas mediante Acceso Directo a Memoria (DMA).",
+        "ok": false
+      },
+      {
+        "t": "Traducir llamadas al sistema genéricas como open() o read() hacia distintos sistemas de archivos como ext4 o NTFS.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "En Windows, ¿qué función realiza la Capa de Abstracción de Hardware (HAL) en relación con los buses de E/S?",
+    "a": "Mapea las direcciones relativas del bus físico a direcciones lógicas del sistema, aislando los drivers de las diferencias entre arquitecturas de bus.",
+    "opts": [
+      {
+        "t": "Mapea las direcciones relativas del bus físico a direcciones lógicas del sistema, aislando los drivers de las diferencias entre arquitecturas de bus.",
+        "ok": true
+      },
+      {
+        "t": "Gestiona las colas de impresión (spooling) y las bibliotecas de formato de datos en el espacio de usuario.",
+        "ok": false
+      },
+      {
+        "t": "Traduce las direcciones virtuales de los procesos en direcciones físicas reales dentro de la CPU.",
+        "ok": false
+      },
+      {
+        "t": "Almacena los archivos diminutos de menos de 1 KB dentro de los registros de la Master File Table (MFT).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "¿Por qué es necesario el bloqueo de páginas en memoria (page locking) durante transferencias DMA? (Consigna repetida en pág. 6 del PDF)",
+    "a": "Para evitar que el algoritmo de reemplazo de páginas reubique o envíe al disco el búfer físico de datos mientras el controlador DMA está transfiriendo información.",
+    "opts": [
+      {
+        "t": "Para evitar que el algoritmo de reemplazo de páginas reubique o envíe al disco el búfer físico mientras el DMA transfiere información.",
+        "ok": true
+      },
+      {
+        "t": "Para evitar que el controlador DMA sobrescriba la tabla de páginas del kernel durante la interrupción.",
+        "ok": false
+      },
+      {
+        "t": "Para garantizar que la CPU pueda modificar el búfer simultáneamente mientras el periférico escribe en él.",
+        "ok": false
+      },
+      {
+        "t": "Para limpiar automáticamente el bit de modificación (Dirty bit) una vez que finaliza la lectura del bloque.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Capa de abstracción del kernel (Traductor Universal orientado a objetos) que permite a los procesos de usuario usar llamadas estándar como open() o read() sin importar si el sistema subyacente es ext4, NTFS o almacenamiento en red (NFS).",
+    "a": "VFS (Virtual File System).",
+    "opts": [
+      {
+        "t": "VFS (Virtual File System).",
+        "ok": true
+      },
+      {
+        "t": "HAL (Hardware Abstraction Layer).",
+        "ok": false
+      },
+      {
+        "t": "MFT (Master File Table).",
+        "ok": false
+      },
+      {
+        "t": "MMU (Memory Management Unit).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "Evento o interrupción (trap) que genera la MMU cuando un proceso en ejecución intenta acceder a una página lógica que no se encuentra presente actualmente en la memoria física (RAM).",
+    "a": "Fallo de página o Page fault.",
+    "opts": [
+      {
+        "t": "Fallo de página o Page fault.",
+        "ok": true
+      },
+      {
+        "t": "Interbloqueo o Deadlock.",
+        "ok": false
+      },
+      {
+        "t": "Sondeo o Polling.",
+        "ok": false
+      },
+      {
+        "t": "Fragmentación interna.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "Nombre con el que se conoce a las divisiones o bloques físicos de tamaño fijo (por ejemplo, de 4 KB) en los que se particiona la memoria RAM física dentro de un esquema de paginación.",
+    "a": "Marcos o Frame.",
+    "opts": [
+      {
+        "t": "Marcos o Frame.",
+        "ok": true
+      },
+      {
+        "t": "Páginas o Pages.",
+        "ok": false
+      },
+      {
+        "t": "Segmentos.",
+        "ok": false
+      },
+      {
+        "t": "Inodos.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Estado anómalo en el que un proceso se pospone indefinidamente porque la política de asignación de recursos del sistema beneficia constantemente a otros procesos (por ejemplo, priorizando siempre tareas pequeñas sobre una grande).",
+    "a": "Inanición o Starvation.",
+    "opts": [
+      {
+        "t": "Inanición o Starvation.",
+        "ok": true
+      },
+      {
+        "t": "Bloqueo Activo o Livelock.",
+        "ok": false
+      },
+      {
+        "t": "Interbloqueo o Deadlock.",
+        "ok": false
+      },
+      {
+        "t": "Interferencia.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Nombre del famoso algoritmo de evitación de bloqueos mutuos propuesto por Edsger Dijkstra que evalúa mediante matrices y vectores si otorgar un recurso mantiene al sistema en un estado seguro.",
+    "a": "Algoritmo del banquero.",
+    "opts": [
+      {
+        "t": "Algoritmo del banquero.",
+        "ok": true
+      },
+      {
+        "t": "Algoritmo de Coffman.",
+        "ok": false
+      },
+      {
+        "t": "Algoritmo de reemplazo LRU.",
+        "ok": false
+      },
+      {
+        "t": "Algoritmo de journaling.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "fs_conc",
+    "q": "Tipo de recursos (como la memoria RAM o el procesador) que pueden quitarse temporalmente al proceso que los posee sin causar fallos en el cómputo ni pérdida de datos.",
+    "a": "Recursos apropiables.",
+    "opts": [
+      {
+        "t": "Recursos apropiables.",
+        "ok": true
+      },
+      {
+        "t": "Recursos no apropiables.",
+        "ok": false
+      },
+      {
+        "t": "Atributos residentes.",
+        "ok": false
+      },
+      {
+        "t": "Dispositivos de carácter.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "Técnica de Entrada/Salida programada (también llamada espera ocupada) en la que la CPU desperdicia tiempo verificando constantemente en un bucle el registro de estado de un dispositivo para saber si terminó su tarea.",
+    "a": "Sondeo o Polling.",
+    "opts": [
+      {
+        "t": "Sondeo o Polling.",
+        "ok": true
+      },
+      {
+        "t": "Spooling.",
+        "ok": false
+      },
+      {
+        "t": "Buffering.",
+        "ok": false
+      },
+      {
+        "t": "Acceso Directo a Memoria (DMA).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "mem_io",
+    "q": "Programas o software específico dependiente del hardware que actúa como intermediario traduciendo los comandos estándar del sistema operativo en instrucciones que el controlador de un periférico pueda entender.",
+    "a": "Controladores o Drivers.",
+    "opts": [
+      {
+        "t": "Controladores o Drivers.",
+        "ok": true
+      },
+      {
+        "t": "Controladores de dispositivo (chips físicos).",
+        "ok": false
+      },
+      {
+        "t": "Manejadores de interrupciones.",
+        "ok": false
+      },
+      {
+        "t": "Capa de Abstracción de Hardware (HAL).",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "labs",
+    "q": "Ejercicio 1: Transferencia segura de archivos por red con SSH (SCP)\nEn el laboratorio de SSH necesitamos transferir un archivo llamado reporte.txt desde nuestra máquina física (Host) hacia el directorio /home/estudiante/ de un servidor contenedorizado (localhost).\n• Pregunta: ¿Qué comando debemos utilizar para copiar este archivo de forma encriptada a través de la red, y cuál es el propósito de sus parámetros?",
+    "a": "scp -i ~/.ssh/id_rsa -P 2222 reporte.txt estudiante@localhost:/home/estudiante/\n• scp: utilidad basada en SSH para transferencia segura.\n• -i: indica la ruta de nuestra llave privada (~/.ssh/id_rsa).\n• -P (mayúscula): indica el puerto mapeado 2222.",
+    "opts": [
+      {
+        "t": "scp -i ~/.ssh/id_rsa -P 2222 reporte.txt estudiante@localhost:/home/estudiante/",
+        "ok": true
+      },
+      {
+        "t": "scp -i ~/.ssh/id_rsa -p 2222 reporte.txt estudiante@localhost:/home/estudiante/",
+        "ok": false
+      },
+      {
+        "t": "scp -i ~/.ssh/id_rsa.pub -P 2222 reporte.txt estudiante@localhost:/home/estudiante/",
+        "ok": false
+      },
+      {
+        "t": "ssh -i ~/.ssh/id_rsa -P 2222 reporte.txt estudiante@localhost:/home/estudiante/",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "labs",
+    "q": "Para evitar ataques de fuerza bruta por contraseña, configuramos el acceso mediante criptografía asimétrica (par de claves RSA).\n• Pregunta: ¿Qué rol cumple la clave privada frente a la clave pública (\"llave y candado\"), en qué archivo del servidor debe alojarse la clave pública del usuario estudiante, y qué permisos octales son obligatorios para .ssh y dicho archivo?",
+    "a": "La clave pública (id_rsa.pub) actúa como \"candado\" y se aloja en /home/estudiante/.ssh/authorized_keys; la privada (id_rsa) es la \"llave\" y nunca sale del cliente.\nPermisos obligatorios: chmod 700 /home/estudiante/.ssh y chmod 600 /home/estudiante/.ssh/authorized_keys.",
+    "opts": [
+      {
+        "t": "id_rsa.pub va a authorized_keys en el servidor; se exige chmod 700 a .ssh y chmod 600 a authorized_keys.",
+        "ok": true
+      },
+      {
+        "t": "id_rsa (privada) se copia a authorized_keys en el servidor; se exige chmod 600 a .ssh y chmod 700 al archivo.",
+        "ok": false
+      },
+      {
+        "t": "id_rsa.pub va a /etc/ssh/sshd_config; se exige chmod 755 a .ssh y chmod 644 a authorized_keys.",
+        "ok": false
+      },
+      {
+        "t": "id_rsa.pub va a authorized_keys en el cliente; se exige chmod 777 a .ssh para que el demonio SSH pueda leerlo.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "labs",
+    "q": "En entornos empresariales con miles de servidores, copiar claves públicas manualmente es inmanejable y dejar las contraseñas activas es un riesgo.\n• Pregunta: ¿Qué tres directivas específicas debemos configurar en /etc/ssh/sshd_config para: 1) prohibir el acceso directo de root, 2) deshabilitar contraseñas, y 3) confiar en certificados firmados por una Autoridad Certificante (/etc/ssh/ca.pub)?",
+    "a": "1. PermitRootLogin no\n2. PasswordAuthentication no\n3. TrustedUserCAKeys /etc/ssh/ca.pub\nLuego se recarga el servicio con service ssh reload.",
+    "opts": [
+      {
+        "t": "PermitRootLogin no; PasswordAuthentication no; TrustedUserCAKeys /etc/ssh/ca.pub",
+        "ok": true
+      },
+      {
+        "t": "PermitRootLogin no; PasswordAuthentication yes; AuthorizedKeysFile /etc/ssh/ca.pub",
+        "ok": false
+      },
+      {
+        "t": "PermitRootLogin yes; PubkeyAuthentication no; TrustedUserCAKeys /etc/ssh/ca.pub",
+        "ok": false
+      },
+      {
+        "t": "DenyRootLogin yes; PasswordAuthentication no; HostCertificate /etc/ssh/ca.pub",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "labs",
+    "q": "En el Laboratorio Integrador 1 programamos en C nuestra propia consola restringida (rshell.c) usando fork(), execvp() y wait(NULL).\n• Pregunta: ¿Qué función cumple cada llamada y qué sucedería técnicamente con nuestra sesión de rshell si invocáramos execvp() directamente sin antes haber llamado a fork()?",
+    "a": "fork() clona el proceso creando un hijo; execvp() reemplaza la imagen de memoria del hijo con el nuevo binario; wait(NULL) suspende al padre hasta que el hijo termine evitando zombies.\nSin fork(), execvp() pisaría la memoria de rshell y al terminar el comando nos cerraría la sesión SSH.",
+    "opts": [
+      {
+        "t": "fork() clona el proceso, execvp() reemplaza su memoria y wait() espera al hijo; sin fork(), execvp() pisa rshell y cierra la sesión SSH.",
+        "ok": true
+      },
+      {
+        "t": "fork() reemplaza el binario, execvp() crea el hijo y wait() libera la RAM; sin fork(), se acumularían procesos zombies en segundo plano.",
+        "ok": false
+      },
+      {
+        "t": "fork() clona el proceso, execvp() ejecuta en hilo separado y wait() sincroniza; sin fork(), execvp() devuelve -1 sin ejecutar nada.",
+        "ok": false
+      },
+      {
+        "t": "fork() suspende al padre, execvp() copia el código y wait() cierra el descriptor; sin fork(), el comando se ejecuta con permisos de root.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "labs",
+    "q": "En Linux creamos /entregas_so con chmod 700, pero necesitamos que el usuario auditor_externo tenga permisos totales (rwx) sobre esa carpeta.\n• Pregunta: ¿Por qué chmod 777 es un grave error, cuál es el comando exacto de ACL para darle permisos solo a ese usuario y qué símbolo aparece en ls -ld?",
+    "a": "chmod 777 otorga permisos totales a Others (cualquier usuario), violando el principio de menor privilegio.\nComando ACL: setfacl -m u:auditor_externo:rwx /entregas_so\nEn ls -ld aparece un signo + al final de los permisos (ej. drwxrwx---+).",
+    "opts": [
+      {
+        "t": "chmod 777 abre acceso a Others; se usa setfacl -m u:auditor_externo:rwx /entregas_so y aparece el símbolo + en ls -ld.",
+        "ok": true
+      },
+      {
+        "t": "chmod 777 cambia el dueño del inodo; se usa getfacl -m u:auditor_externo:rwx /entregas_so y aparece el símbolo * en ls -ld.",
+        "ok": false
+      },
+      {
+        "t": "chmod 777 abre acceso al grupo; se usa setfacl -m g:auditor_externo:rwx /entregas_so y aparece el símbolo @ en ls -ld.",
+        "ok": false
+      },
+      {
+        "t": "chmod 777 habilita SUID; se usa chmod u+rwx auditor_externo /entregas_so y aparece la letra S en ls -ld.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "labs",
+    "q": "Durante las pruebas de la shell restringida, un usuario dejó en ejecución el comando sleep 3000.\n• Pregunta: ¿Cómo localiza root el PID y lo termina de forma inmediata, y por qué un proceso en modo usuario jamás puede ignorar ni interceptar una señal SIGKILL (-9)?",
+    "a": "Comandos: ps aux | grep \"sleep 3000\" y luego kill -9 <PID>.\nFundamento: A diferencia de SIGTERM o SIGINT (entregadas en modo usuario), SIGKILL (-9) nunca pasa por modo usuario; es interceptada y ejecutada directamente por el Kernel.",
+    "opts": [
+      {
+        "t": "Con ps aux | grep y kill -9 <PID>; SIGKILL nunca pasa por modo usuario porque es ejecutada directamente por el Kernel.",
+        "ok": true
+      },
+      {
+        "t": "Con ps aux | grep y kill -15 <PID>; SIGTERM tiene prioridad máxima en el planificador y no puede ser capturada.",
+        "ok": false
+      },
+      {
+        "t": "Con top -k y kill -2 <PID>; SIGINT sobrescribe la tabla de páginas del proceso antes de que llegue al procesador.",
+        "ok": false
+      },
+      {
+        "t": "Con ls -l /proc y kill -9 <PID>; SIGKILL se entrega al manejador de señales del programa con privilegios de root.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "labs",
+    "q": "En el Laboratorio 2 construimos una jaula virtual manualmente antes de usar Docker.\n• Pregunta: ¿Cuál es la diferencia arquitectónica entre una Máquina Virtual (Hipervisor) y un contenedor, y qué función cumplen chroot, namespaces y cgroups?",
+    "a": "La VM emula hardware y ejecuta un SO completo con su propio kernel; el contenedor comparte el único kernel del Host.\n• chroot: cambia el directorio raíz (/) aparente.\n• namespaces: aíslan la visibilidad (PID 1, hostname, red).\n• cgroups: racionan y limitan el consumo físico de hardware (CPU, RAM, PIDs).",
+    "opts": [
+      {
+        "t": "La VM usa su propio kernel invitado y el contenedor comparte el kernel del Host; chroot cambia /, namespaces aísla visibilidad y cgroups limita recursos.",
+        "ok": true
+      },
+      {
+        "t": "La VM comparte el kernel del Host y el contenedor emula hardware; chroot limita RAM, namespaces cambia / y cgroups oculta procesos.",
+        "ok": false
+      },
+      {
+        "t": "Ambos ejecutan kernels independientes; chroot aísla la red, namespaces raciona la CPU y cgroups cambia el directorio raíz.",
+        "ok": false
+      },
+      {
+        "t": "La VM usa namespaces para emular ISA y el contenedor usa hipervisor tipo 1; cgroups impide escalar con ../../ fuera de /tmp/jaula.",
+        "ok": false
+      }
+    ]
+  },
+  {
+    "cat": "labs",
+    "q": "En el laboratorio de Windows Server Core alternamos entre cmd y PowerShell.\n• Pregunta: ¿Qué comandos se utilizan para: 1) crear el usuario Alumno1 y agregarlo a administradores locales (cmd), 2) listar procesos con PID y forzar cierre por PID (cmd) o por nombre (PowerShell), y 3) reiniciar Windows Update (wuauserv) en PowerShell?",
+    "a": "1. net user Alumno1 Password123! /add y net localgroup administrators Alumno1 /add\n2. tasklist (o Get-Process), taskkill /PID 1234 /F y Stop-Process -Name notepad\n3. Get-Service y Restart-Service -Name wuauserv",
+    "opts": [
+      {
+        "t": "net user /add y net localgroup administrators /add; tasklist, taskkill /PID ... /F y Stop-Process -Name; Restart-Service -Name wuauserv.",
+        "ok": true
+      },
+      {
+        "t": "New-LocalUser y Add-LocalGroupMember; ps, kill -9 y Kill-Process; Get-Service -Restart wuauserv.",
+        "ok": false
+      },
+      {
+        "t": "net user /create y net admin /add; tasklist, taskkill -Name -Force y Stop-Process -PID; Reboot-Service wuauserv.",
+        "ok": false
+      },
+      {
+        "t": "net user /add y net localgroup /add; Get-Task, taskkill /PID /S y Remove-Process; net restart wuauserv.",
+        "ok": false
+      }
+    ]
+  }
+];
+
+    const CAT_NAMES = {
+      fs_conc: "Archivos y Concurrencia",
+      mem_io: "Memoria y Entrada/Salida",
+      labs: "Laboratorios Prácticos"
+    };
+
+    let activeCat = "all";
+    let isRandom = true;
+    let order = [];
+    let pos = 0;
+    let correct = 0;
+    let answered = false;
+    let wrongDetails = [];
+    let currentOptions = [];
+    let seconds = 0;
+    let timerInterval = null;
+
+    const $ = id => document.getElementById(id);
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function updateBestDisplay() {
+      const best = localStorage.getItem("so_sim_best");
+      $("best-pill").textContent = best ? `🏆 Récord: ${best}%` : "🏆 Récord: —";
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      seconds = 0;
+      $("timer-pill").textContent = "⏱ 00:00";
+      timerInterval = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+        const s = String(seconds % 60).padStart(2, "0");
+        $("timer-pill").textContent = `⏱ ${m}:${s}`;
+      }, 1000);
+    }
+
+    function getFilteredIndices() {
+      return RAW_DATA
+        .map((item, idx) => ({ item, idx }))
+        .filter(x => activeCat === "all" || x.item.cat === activeCat)
+        .map(x => x.idx);
+    }
+
+    function start(customIndices = null) {
+      const base = customIndices || getFilteredIndices();
+      order = isRandom ? shuffle(base) : base.slice();
+      pos = 0;
+      correct = 0;
+      wrongDetails = [];
+      answered = false;
+
+      $("total-pill").textContent = `${order.length} consignas`;
+      $("quiz").classList.remove("hidden");
+      $("summary").classList.add("hidden");
+      $("review-list").classList.add("hidden");
+      $("review-list").innerHTML = "";
+
+      startTimer();
+      render();
+    }
+
+    function render() {
+      answered = false;
+      const item = RAW_DATA[order[pos]];
+      currentOptions = shuffle(item.opts);
+
+      const pct = pos === 0 ? 0 : Math.round((correct / pos) * 100);
+      $("progress").textContent = `Pregunta ${pos + 1} de ${order.length}`;
+      $("score").textContent = `Aciertos: ${correct} (${pct}%)`;
+      $("bar").style.width = `${(pos / order.length) * 100}%`;
+      $("qnum").textContent = `PREGUNTA ${pos + 1}`;
+      $("qcat").textContent = CAT_NAMES[item.cat] || "General";
+      $("question").textContent = item.q;
+
+      $("options").innerHTML = "";
+      $("feedback").className = "feedback";
+      $("feedback").innerHTML = "";
+      $("next").classList.add("hidden");
+
+      currentOptions.forEach((o, i) => {
+        const b = document.createElement("button");
+        b.className = "opt";
+        const letter = document.createElement("span");
+        letter.className = "letter";
+        letter.textContent = "ABCD"[i];
+        const label = document.createElement("span");
+        label.textContent = o.t;
+        b.append(letter, label);
+        b.addEventListener("click", () => choose(i));
+        $("options").appendChild(b);
+      });
+    }
+
+    function choose(i) {
+      if (answered) return;
+      answered = true;
+
+      const item = RAW_DATA[order[pos]];
+      const buttons = [...$("options").children];
+      const picked = currentOptions[i];
+      const rightIdx = currentOptions.findIndex(x => x.ok);
+
+      buttons.forEach((b, k) => {
+        b.disabled = true;
+        if (k === rightIdx) b.classList.add("correct");
+        if (k === i && !picked.ok) b.classList.add("wrong");
+      });
+
+      const fb = $("feedback");
+      if (picked.ok) {
+        correct++;
+        fb.className = "feedback good";
+        fb.innerHTML = '<strong>✓ ¡Correcto!</strong><div class="answertext"></div>';
+      } else {
+        wrongDetails.push({
+          idx: order[pos],
+          q: item.q,
+          picked: picked.t,
+          right: currentOptions[rightIdx].t
+        });
+        fb.className = "feedback bad";
+        fb.innerHTML = '<strong>✕ Respuesta incorrecta</strong><div class="answertext"></div>';
+      }
+
+      fb.querySelector(".answertext").textContent = item.a;
+      if (item.note) {
+        const noteDiv = document.createElement("div");
+        noteDiv.className = "errata-note";
+        noteDiv.textContent = item.note;
+        fb.appendChild(noteDiv);
+      }
+
+      const newPct = Math.round((correct / (pos + 1)) * 100);
+      $("score").textContent = `Aciertos: ${correct} (${newPct}%)`;
+      $("next").textContent = pos === order.length - 1 ? "Ver resultado final" : "Siguiente pregunta →";
+      $("next").classList.remove("hidden");
+    }
+
+    function finish() {
+      clearInterval(timerInterval);
+      $("quiz").classList.add("hidden");
+      $("summary").classList.remove("hidden");
+      $("bar").style.width = "100%";
+
+      const pct = Math.round((correct / order.length) * 100);
+      $("finalscore").textContent = `${correct}/${order.length} (${pct}%)`;
+
+      const prevBest = Number(localStorage.getItem("so_sim_best") || 0);
+      if (pct > prevBest && order.length >= 10) {
+        localStorage.setItem("so_sim_best", String(pct));
+        updateBestDisplay();
+      }
+
+      $("message").textContent =
+        correct === order.length
+          ? "¡Puntaje perfecto! Ya podés compartirlo tranquilo y entrar a rendir."
+          : `Completaste el bloque en ${$("timer-pill").textContent.replace("⏱ ", "")}. Repasá abajo las ${wrongDetails.length} preguntas que fallaste.`;
+
+      $("missed").disabled = wrongDetails.length === 0;
+
+      if (wrongDetails.length > 0) {
+        const list = $("review-list");
+        list.innerHTML = `<div class="qnum" style="margin-bottom:4px">REPASO DE ERRORES (${wrongDetails.length})</div>`;
+        wrongDetails.forEach(w => {
+          const div = document.createElement("div");
+          div.className = "review-item";
+          div.innerHTML = `
+            <div class="review-q">${escapeHtml(w.q)}</div>
+            <div class="review-bad">✕ Elegiste: ${escapeHtml(w.picked)}</div>
+            <div class="review-good">✓ Correcta: ${escapeHtml(w.right)}</div>
+          `;
+          list.appendChild(div);
+        });
+        list.classList.remove("hidden");
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[m]));
+    }
+
+    $("next").addEventListener("click", () => {
+      if (pos < order.length - 1) { pos++; render(); }
+      else finish();
+    });
+
+    $("restart").addEventListener("click", () => start());
+    $("again").addEventListener("click", () => start());
+    $("missed").addEventListener("click", () => start(wrongDetails.map(w => w.idx)));
+
+    document.querySelectorAll(".chip[data-cat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".chip[data-cat]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeCat = btn.dataset.cat;
+        start();
+      });
+    });
+
+    $("toggle-order").addEventListener("click", () => {
+      isRandom = !isRandom;
+      $("toggle-order").textContent = isRandom ? "🔀 Aleatorio: SÍ" : "📋 Orden PDF: SÍ";
+      start();
+    });
+
+    document.addEventListener("keydown", e => {
+      if ($("quiz").classList.contains("hidden")) return;
+      const key = e.key.toUpperCase();
+      const map = { "1": 0, "A": 0, "2": 1, "B": 1, "3": 2, "C": 2, "4": 3, "D": 3 };
+      if (!answered && key in map && map[key] < currentOptions.length) {
+        choose(map[key]);
+      } else if (answered && (e.key === "Enter" || e.key === "ArrowRight")) {
+        e.preventDefault();
+        $("next").click();
+      }
+    });
+
+    updateBestDisplay();
+    start();
+  </script>
+</body>
+</html>
